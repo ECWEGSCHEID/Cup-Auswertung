@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EC Wegscheid Cupauswertung – Version 1.13</title>
+  <style>
+    :root {
+      --bg-overlay: rgba(15, 23, 42, 0.82);
+      --card-bg: rgba(30, 41, 59, 0.92);
+      --accent: #dc2626;
+      --accent-bright: #ef4444;
+      --text: #ffffff;
+      --text-muted: #cbd5e1;
+      --border: rgba(255, 255, 255, 0.2);
+      --border-silver: #94a3b8;
+      --success: #10b981;
+      --admin-purple: #7c3aed;
+      --danger: #b91c1c;
+      --gold: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+    
+    body { 
+      background: url('Hintergrund Rot ohne Logo.png') no-repeat center center fixed; 
+      background-size: cover; 
+      color: var(--text); 
+      padding: 4px; 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+    }
+
+    header { 
+      position: relative; 
+      width: 66.66%;
+      margin: 0 auto 4px auto;
+      text-align: center; 
+      padding: 4px 8px; 
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-bottom: 3px solid var(--accent); 
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    h1 { font-size: 1.15rem; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+
+    .version-badge {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    .btn-admin-corner { position: absolute; right: 8px; top: 4px; background: var(--admin-purple); color: white; border: 1px solid var(--border); padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+    .btn-admin-corner:active { transform: scale(0.95); }
+
+    .container { max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; }
+
+    .view { display: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+    .view.active { display: flex; flex-direction: column; }
+
+    label { display: block; font-size: 0.8rem; margin-bottom: 2px; font-weight: bold; }
+    select, input[type="text"], input[type="number"], textarea { width: 100%; padding: 6px 8px; font-size: 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-silver); color: var(--text); border-radius: 6px; margin-bottom: 6px; }
+    textarea { height: 70px; resize: vertical; }
+
+    .btn { display: inline-block; width: 100%; padding: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; background: linear-gradient(135deg, var(--accent) 0%, #991b1b 100%); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; margin-bottom: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); touch-action: manipulation; }
+    .btn:active { transform: scale(0.98); }
+    .btn-secondary { background: linear-gradient(135deg, #475569 0%, #1e293b 100%); }
+    .btn-mainmenu { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); border: 1px solid var(--border); }
+    .btn-success { background: linear-gradient(135deg, var(--success) 0%, #065f46 100%); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger) 0%, #7f1d1d 100%); }
+    .btn-ko { background: linear-gradient(135deg, var(--gold) 0%, #b45309 100%); color: #fff; }
+    
+    .tournament-grid { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 10px; width: 100%; }
+    .btn-tournament { width: 100%; max-width: 450px; background: rgba(30, 41, 59, 0.85); color: white; padding: 10px 12px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--border-silver); text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+
+    .group-card { background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-silver); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+    .group-card h3 { margin-bottom: 4px; color: #38bdf8; text-align: center; font-size: 0.95rem; }
+
+    .game-row { display: grid; grid-template-columns: 50px 1fr 45px 1fr 40px; gap: 3px; align-items: center; background: rgba(15, 23, 42, 0.9); padding: 4px 2px; border-radius: 6px; margin-bottom: 4px; text-align: center; border: 1px solid var(--border); }
+    .game-title { font-weight: bold; color: var(--text-muted); text-align: left; font-size: 0.75rem; }
+    .stepper { display: flex; align-items: center; justify-content: center; gap: 2px; }
+    .btn-step { min-width: 30px; height: 30px; font-size: 1rem; font-weight: bold; line-height: 30px; padding: 0; background: #334155; border: 1px solid var(--border-silver); color: white; border-radius: 4px; cursor: pointer; touch-action: manipulation; }
+    .score-disp { font-size: 0.9rem; font-weight: bold; min-width: 18px; text-align: center; }
+    .pts-disp { font-size: 0.75rem; font-weight: bold; color: #38bdf8; }
+    .match-summary { background: rgba(2, 132, 199, 0.85); padding: 4px; border-radius: 6px; text-align: center; font-size: 0.85rem; font-weight: bold; margin: 4px 0; border: 1px solid rgba(255,255,255,0.3); }
+
+    .table-container { width: 100%; margin-top: 2px; overflow-x: auto; max-height: 55vh; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    th, td { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { background: rgba(220, 38, 38, 0.7); color: var(--text); position: sticky; top: 0; font-size: 0.75rem; }
+    td:nth-child(2) { text-align: left; font-weight: bold; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+
+    tr.promotion-cutoff td { border-bottom: 3px solid var(--gold) !important; }
+
+    .status-badge { text-align: center; font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; }
+
+    .nav-bar { margin-top: 4px; border-top: 1px solid var(--border); padding-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    
+    .admin-tab-bar { display: flex; gap: 3px; margin-bottom: 8px; border-bottom: 2px solid var(--border); padding-bottom: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-tab { flex: 1; min-width: 70px; padding: 6px 2px; font-size: 0.75rem; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); color: white; border-radius: 4px; cursor: pointer; text-align: center; font-weight: bold; white-space: nowrap; }
+    .admin-tab.active { background: var(--admin-purple); border-color: var(--admin-purple); }
+
+    .match-checkbox-list, .history-list { max-height: 180px; overflow-y: auto; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-silver); border-radius: 6px; padding: 4px; margin-bottom: 8px; }
+    .match-checkbox-item { display: flex; align-items: center; gap: 6px; padding: 4px; border-bottom: 1px solid var(--border); font-size: 0.75rem; }
+    .corr-item, .history-item { background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); padding: 6px; border-radius: 4px; margin-bottom: 4px; font-size: 0.75rem; }
+    .history-item { display: flex; flex-direction: column; gap: 1px; }
+
+    @media (max-width: 650px) {
+      header { width: 100%; border-radius: 6px; flex-direction: column; gap: 4px; padding: 6px; }
+      .version-badge { position: static; transform: none; display: inline-block; margin-bottom: 2px; }
+      h1 { font-size: 1rem; }
+      .btn-admin-corner { position: static; width: 100%; margin-top: 2px; text-align: center; }
+      .view { padding: 6px; }
+    }
+
+   /* --- DRUCKOPTIMIERUNG (Genau 2 Karten pro A4 Seite im Querformat) --- */
+    #printArea { display: none; }
+
+    @media print {
+      /* Zwingt den Drucker zwingend zum A4 Querformat */
+      @page { size: A4 landscape; margin: 10mm; }
+
+      body * { visibility: hidden; }
+      body { background: #fff !important; margin: 0; padding: 0; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100vw; color: #000; background: #fff; }
+
+      .protocol-container {
+        width: 100%;
+        height: 94mm; /* Exakte Hälfte der bedruckbaren Höhe im A4-Querformat (ca. 190mm Gesamthöhe) */
+        box-sizing: border-box;
+        padding: 2px 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        page-break-inside: avoid;
+        position: relative;
+        background: #fff;
+        font-family: Arial, sans-serif;
+        color: #000;
+      }
+
+      /* Nach jeweils 2 Formularen einen harten Seitenumbruch erzwingen */
+      .protocol-container:nth-child(even) {
+        page-break-after: always;
+      }
+
+      /* Exakte mittlere Trennlinie zwischen den zwei Karten auf dem A4 Blatt */
+      .protocol-container:nth-child(odd):not(:last-child):after {
+        content: "";
+        position: absolute;
+        bottom: -4mm;
+        left: 0;
+        width: 100%;
+        border-bottom: 2px dashed #000;
+      }
+
+      .protocol-container table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8pt; }
+      .protocol-container th, .protocol-container td { border: 1px solid black; text-align: center; vertical-align: middle; padding: 2px 1px; overflow: hidden; }
+      
+      .spiel-nr { font-weight: bold; font-style: italic; font-size: 8pt; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; padding-left: 4px; }
+      .team-title { font-style: italic; font-weight: bold; font-size: 9pt; text-align: left; padding-left: 4px; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .subheader { font-size: 7pt; font-weight: bold; background-color: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      
+      /* Angepasste Spaltenbreiten & Schriften für perfekte Passform */
+      .anschub-col { width: 28%; font-size: 7pt; text-align: left; padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
+      .score-col { width: 3.5%; height: 15px; }
+      .stockpunkte-sum-col { width: 7%; border-left: 2px solid black !important; border-right: 2px solid black !important; background-color: #fafafa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 7pt; }
+      .punkte-col { width: 5%; border-right: 2px solid black !important; background-color: #fafafa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 7pt; }
+      
+      .sum-row { font-weight: bold; background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 7pt; }
+      .footer-section td { border: 1px solid black; font-size: 7pt; text-align: left; padding: 2px; }
+      .signature-line { margin-top: 8px; border-top: 1px solid black; width: 85%; }
+    }
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkFtooRVYzQ6a_WnZiC1hRsBjy1B9ALyE",
+      authDomain: "solo-pyramide-wegscheid-2026.firebaseapp.com",
+      databaseURL: "https://solo-pyramide-wegscheid-2026-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "solo-pyramide-wegscheid-2026",
+      storageBucket: "solo-pyramide-wegscheid-2026.firebasestorage.app",
+      messagingSenderId: "49753657360",
+      appId: "1:49753657360:web:6b7dc1d28712d671b0fa95"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.db = db;
+    window.fbRef = ref;
+    window.fbSet = set;
+    window.fbOnValue = onValue;
+
+    if (window.initFirebaseSync) window.initFirebaseSync();
+  </script>
+</head>
+<body>
+
+  <header>
+    <div class="version-badge">Version 1.13</div>
+    <h1>🥏 EC Wegscheid Cupauswertung</h1>
+    <button class="btn-admin-corner" onclick="checkAdminAccess()">⚙️ Admin</button>
+  </header>
+
+  <div class="container">
+
+    <div id="view-main" class="view active">
+      <h2 style="margin-bottom: 6px; text-align: center; font-size: 1.05rem;">Turnier auswählen</h2>
+      <div id="tournamentButtons" class="tournament-grid"></div>
+    </div>
+
+    <div id="view-groups" class="view">
+      <h2 id="groupsTitle" style="margin-bottom: 2px; text-align: center; font-size: 1.05rem;">Turnier Name</h2>
+      <p id="groupsSub" style="color: var(--text-muted); margin-bottom: 6px; text-align: center; font-size: 0.75rem;"></p>
+
+      <div id="groupCardsContainer"></div>
+
+      <div id="dashKoContainer" class="group-card" style="display: none; border-color: var(--gold);">
+        <h3 style="color: var(--gold); font-size: 0.85rem;">🏆 KO-Runden / Finalspiele</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 4px; margin-top: 4px;">
+          <button class="btn btn-ko" style="padding: 6px; font-size: 0.8rem;" onclick="openKoInput('Viertelfinale')">Viertelfinale</button>
+          <button class="btn btn-ko" style="padding: 6px; font-size: 0.8rem;" onclick="openKoInput('Halbfinale')">Halbfinale</button>
+          <button class="btn btn-ko" style="padding: 6px; font-size: 0.8rem;" onclick="openKoInput('Spiel um Platz 3')">Platz 3</button>
+          <button class="btn btn-ko" style="padding: 6px; font-size: 0.8rem;" onclick="openKoInput('Finale')">Finale</button>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="btn btn-mainmenu" onclick="goToMainMenu()">🏠 Hauptmenü</button>
+      </div>
+    </div>
+
+    <!-- TABELLE -->
+    <div id="view-table" class="view">
+      <h2 id="tableTitle" style="text-align: center; margin-bottom: 2px; font-size: 1.05rem;">Tabelle</h2>
+      <div id="tableStatus" class="status-badge"></div>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>Sp.</th>
+              <th>Punkte</th>
+              <th>Stöcke</th>
+              <th>Quote</th>
+              <th>Satzpkt.</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="nav-bar">
+        <button class="btn btn-secondary" onclick="showView('view-groups')">⬅️ Zurück</button>
+        <button class="btn btn-mainmenu" onclick="goToMainMenu()">🏠 Hauptmenü</button>
+      </div>
+    </div>
+
+    <!-- ERGEBNIS EINTRAGEN -->
+    <div id="view-match" class="view">
+      <h2 id="matchGroupHeader" style="font-size: 1.05rem; margin-bottom: 4px;">Ergebnis eintragen</h2>
+      
+      <label>1. Mannschaft:</label>
+      <select id="selectTeamA" onchange="onTeamASelected()">
+        <option value="">-- Mannschaft wählen --</option>
+      </select>
+
+      <label>2. Gegner (offene Spiele):</label>
+      <select id="selectTeamB" onchange="onTeamBSelected()" disabled>
+        <option value="">-- Zuerst Mannschaft wählen --</option>
+      </select>
+
+      <div id="scoreArea" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 0.9rem; font-weight: bold; margin: 4px 0; color: #38bdf8;">
+          <div id="teamAName">Team A</div>
+          <div id="teamBName">Team B</div>
+        </div>
+
+        <div id="gamesContainer"></div>
+        <div class="match-summary" id="matchSummary">Endstand: Satzpunkte 0 : 0</div>
+        <button class="btn btn-success" onclick="saveMatchResult()">Ergebnis Speichern</button>
+      </div>
+
+      <div class="nav-bar">
+        <button class="btn btn-secondary" onclick="showView('view-groups')">⬅️ Zurück</button>
+        <button class="btn btn-mainmenu" onclick="goToMainMenu()">🏠 Hauptmenü</button>
+      </div>
+    </div>
+
+    <!-- KO-PHASE -->
+    <div id="view-ko" class="view">
+      <h2 id="koTitle" style="color: var(--gold); font-size: 1.05rem; margin-bottom: 4px;">KO-Phase</h2>
+      <button class="btn btn-success" style="margin-bottom: 6px; padding: 6px;" onclick="autoGenerateKoPairings()">⚡ KO-Paarungen aus Tabelle laden</button>
+      <div id="koMatchList" style="max-height: 55vh; overflow-y: auto;"></div>
+      <div class="nav-bar">
+        <button class="btn btn-secondary" onclick="showView('view-groups')">⬅️ Zurück</button>
+        <button class="btn btn-mainmenu" onclick="goToMainMenu()">🏠 Hauptmenü</button>
+      </div>
+    </div>
+
+    <!-- ADMIN BEREICH -->
+    <div id="view-admin" class="view">
+      <h2 style="font-size: 1.05rem; margin-bottom: 4px;">⚙️ Admin-Bereich</h2>
+      
+      <div class="admin-tab-bar">
+        <div id="tabNew" class="admin-tab active" onclick="switchAdminTab('new')">Neu</div>
+        <div id="tabMatchEdit" class="admin-tab" onclick="switchAdminTab('matchEdit')">Erg.</div>
+        <div id="tabHistory" class="admin-tab" onclick="switchAdminTab('history')">Historie</div>
+        <div id="tabPrint" class="admin-tab" onclick="switchAdminTab('print')">Druck</div>
+        <div id="tabEdit" class="admin-tab" onclick="switchAdminTab('edit')">Verwaltung</div>
+      </div>
+
+      <div id="adminSecNew">
+        <label>Turniername:</label>
+        <input type="text" id="adminName" placeholder="z.B. Wegscheider Cup 2026">
+        
+        <div class="form-row">
+          <div>
+            <label>Gruppen:</label>
+            <select id="adminGroupCount">
+              <option value="1">1 Gruppe</option>
+              <option value="2">2 Gruppen</option>
+              <option value="3">3 Gruppen</option>
+              <option value="4">4 Gruppen</option>
+              <option value="5">5 Gruppen</option>
+              <option value="6">6 Gruppen</option>
+              <option value="7">7 Gruppen</option>
+              <option value="8">8 Gruppen</option>
+            </select>
+          </div>
+          <div>
+            <label>Aufsteiger (pro Gr.):</label>
+            <select id="adminAdvancing">
+              <option value="1">1 Team</option>
+              <option value="2" selected>2 Teams</option>
+              <option value="3">3 Teams</option>
+              <option value="4">4 Teams</option>
+              <option value="5">5 Teams</option>
+              <option value="6">6 Teams</option>
+              <option value="7">7 Teams</option>
+              <option value="8">8 Teams</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Modus / Sätze:</label>
+            <select id="adminTotalSets">
+              <option value="1">1 Satz</option>
+              <option value="2">2 Sätze</option>
+              <option value="3">3 Sätze</option>
+              <option value="4">4 Sätze</option>
+              <option value="5" selected>5 Sätze</option>
+              <option value="6">6 Sätze</option>
+              <option value="7">7 Sätze</option>
+              <option value="8">8 Sätze</option>
+              <option value="9">9 Sätze</option>
+              <option value="10">10 Sätze</option>
+            </select>
+          </div>
+          <div>
+            <label>Zuteilung Modus:</label>
+            <select id="adminAllocationMode">
+              <option value="roundrobin">Automatisch (abwechselnd)</option>
+              <option value="block">Nach Startnummer (Blöcke)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 6px; padding-top: 2px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal;">
+            <input type="checkbox" id="adminHasKo" style="width:auto; height:16px;">
+            KO-Runden
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal;">
+            <input type="checkbox" id="adminHasReturnLeg" style="width:auto; height:16px;">
+            Mit Rückrunde
+          </label>
+        </div>
+        
+        <label>Mannschaften (Zeile für Zeile):</label>
+        <textarea id="adminTeams"></textarea>
+        
+        <button class="btn btn-success" onclick="createNewTournament()">Turnier anlegen</button>
+      </div>
+
+      <!-- ADMIN TAB: ERGEBNISSE KORRIGIEREN -->
+      <div id="adminSecMatchEdit" style="display: none;">
+        <label>Turnier auswählen:</label>
+        <select id="adminMatchEditSelectTournament" onchange="onAdminMatchEditTournamentChange()">
+          <option value="">-- Turnier wählen --</option>
+        </select>
+
+        <div id="adminMatchEditGroupWrapper" style="display: none;">
+          <label>Gruppe auswählen:</label>
+          <select id="adminMatchEditSelectGroup" onchange="loadCompletedMatchesForAdmin()">
+            <option value="">-- Gruppe wählen --</option>
+          </select>
+        </div>
+
+        <div id="adminCompletedMatchesList" style="margin-top: 4px; max-height: 160px; overflow-y: auto;"></div>
+
+        <div id="adminEditMatchForm" style="display: none; background: rgba(15, 23, 42, 0.9); padding: 6px; border-radius: 6px; border: 1px solid var(--border-silver); margin-top: 4px;">
+          <h3 id="adminEditMatchHeader" style="margin-bottom: 4px; color: #38bdf8; text-align: center; font-size:0.9rem;"></h3>
+          <div id="adminEditGamesContainer"></div>
+          <div class="match-summary" id="adminEditMatchSummary">Endstand: Satzpunkte 0 : 0</div>
+          
+          <div style="display: flex; gap: 4px; margin-top: 6px;">
+            <button class="btn btn-success" style="flex: 1; margin:0;" onclick="saveAdminMatchCorrection()">Korrektur Speichern</button>
+            <button class="btn btn-danger" style="flex: 1; margin:0;" onclick="resetAdminMatchToOpen()">🗑️ Spiel auf Offen zurücksetzen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB: HISTORIE -->
+      <div id="adminSecHistory" style="display: none;">
+        <label>Turnier auswählen:</label>
+        <select id="adminHistorySelectTournament" onchange="loadTournamentHistory()">
+          <option value="">-- Turnier wählen --</option>
+        </select>
+        <div id="adminHistoryContainer" class="history-list" style="max-height: 180px;"></div>
+      </div>
+
+      <!-- ADMIN TAB: DRUCK -->
+      <div id="adminSecPrint" style="display: none;">
+        <label>Turnier auswählen:</label>
+        <select id="adminPrintSelectTournament" onchange="onPrintTournamentChanged()">
+          <option value="">-- Turnier wählen --</option>
+        </select>
+
+        <div id="adminPrintContent" style="display: none;">
+          <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+            <button class="btn btn-secondary" style="padding: 4px;" onclick="toggleAllMatchesPrint(true)">Alle</button>
+            <button class="btn btn-secondary" style="padding: 4px;" onclick="toggleAllMatchesPrint(false)">Keine</button>
+          </div>
+          <div id="printMatchList" class="match-checkbox-list" style="max-height: 140px;"></div>
+          <button class="btn btn-success" onclick="triggerPrintSelected()">🖨️ Wertungsblätter drucken</button>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB: VERWALTUNG / STATUS & MANNSCHAFTEN -->
+      <div id="adminSecEdit" style="display: none;">
+        <label>Turnier auswählen:</label>
+        <select id="adminSelectTournament" onchange="loadAdminTournamentData()">
+          <option value="">-- Turnier wählen --</option>
+        </select>
+
+        <div id="adminEditBody" style="display: none;">
+          <label>Turniername ändern:</label>
+          <input type="text" id="adminEditName">
+          
+          <div style="margin: 6px 0;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal;">
+              <input type="checkbox" id="adminEditHasReturnLeg" style="width:auto; height:16px;">
+              Mit Rückrunde (Hin- und Rückspiel)
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+            <button class="btn btn-secondary" style="padding: 6px; flex: 1;" onclick="saveTournamentSettings()">Einstellungen Speichern</button>
+            <button class="btn btn-ko" style="padding: 6px; flex: 1;" onclick="regenerateTournamentFixtures()">🔄 Spielplan neu generieren</button>
+          </div>
+          
+          <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border);">
+
+          <h3 style="color: #38bdf8; font-size: 0.9rem; margin-bottom: 4px;">👥 Mannschaften bearbeiten</h3>
+          <label>Gruppe wählen:</label>
+          <select id="adminTeamEditGroupSelect" onchange="loadAdminTeamsForGroup()">
+            <option value="">-- Gruppe wählen --</option>
+          </select>
+          <div id="adminTeamEditList" style="max-height: 140px; overflow-y: auto; background: rgba(15,23,42,0.9); border: 1px solid var(--border-silver); border-radius: 6px; padding: 4px; margin-bottom: 6px;"></div>
+
+          <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+            <input type="text" id="adminNewTeamInput" placeholder="Neues Team hinzufügen" style="margin-bottom:0;">
+            <button class="btn btn-success" style="width: auto; padding: 6px 12px; margin:0;" onclick="addNewTeamToGroup()">+ Hinzufügen</button>
+          </div>
+          
+          <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border);">
+          
+          <h3 style="color: var(--danger); font-size: 0.9rem; margin-bottom: 4px;">⚠️ Team Status (DQ / DNF)</h3>
+          <label>Gruppe wählen:</label>
+          <select id="adminDqGroupSelect" onchange="loadDqTeamsList()">
+            <option value="">-- Gruppe wählen --</option>
+          </select>
+          
+          <label>Mannschaft wählen:</label>
+          <select id="adminDqTeamSelect">
+            <option value="">-- Zuerst Gruppe wählen --</option>
+          </select>
+
+          <label>Status-Art:</label>
+          <select id="adminDqTypeSelect">
+            <option value="DQ">DQ (Disqualifiziert)</option>
+            <option value="DNF">DNF (Nicht beendet / Aufgegeben)</option>
+          </select>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn btn-danger" style="padding: 6px;" onclick="disqualifyTeamAction()">🚫 Status setzen</button>
+            <button class="btn btn-success" style="padding: 6px;" onclick="removeDisqualificationAction()">✅ Status aufheben</button>
+          </div>
+
+          <br>
+          <button class="btn btn-danger" style="padding: 6px; margin-top: 4px;" onclick="deleteTournament()">🗑️ Turnier löschen</button>
+        </div>
+
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 0.85rem; margin-bottom: 4px;">💾 Datensicherung (Export / Import)</h3>
+        <button class="btn btn-secondary" style="padding: 6px;" onclick="exportDataToFile()">📥 Daten als Datei sichern</button>
+        <label style="margin-top: 6px;">📤 Daten aus Datei wiederherstellen:</label>
+        <input type="file" id="importFileInput" accept=".json" onchange="importDataFromFile(event)">
+      </div>
+
+      <div class="nav-bar">
+        <button class="btn btn-mainmenu" onclick="goToMainMenu()">🏠 Hauptmenü</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="printArea"></div>
+
+  <script>
+    const ADMIN_PASS = "081500";
+
+    let tournaments = {};
+    let activeId = null;
+    let activeGroup = null;
+    let activeKoStage = null;
+    let selectedMatchRef = null;
+    let adminEditingMatchRef = null;
+    let currentMatchGames = [];
+
+    window.initFirebaseSync = function() {
+      if (!window.db || !window.fbRef || !window.fbOnValue) return;
+      const tRef = window.fbRef(window.db, 'tournaments');
+      window.fbOnValue(tRef, (snapshot) => {
+        tournaments = snapshot.val() || {};
+        renderMainButtons();
+        if (activeId && tournaments[activeId]) {
+          if (document.getElementById('view-groups').classList.contains('active')) openGroupSelection(activeId);
+          else if (document.getElementById('view-table').classList.contains('active') && activeGroup) openGroupTable(activeGroup);
+          else if (document.getElementById('view-ko').classList.contains('active') && activeKoStage) renderKoMatches(activeKoStage);
+        }
+      }, (err) => {
+        console.error(err);
+        alert("Firebase konnte nicht geladen werden. Prüfe Internetverbindung und Firebase-Regeln.");
+      });
+    };
+
+    window.addEventListener('load', () => {
+      setDefaultTeamsTemplate();
+      if (window.initFirebaseSync) window.initFirebaseSync();
+    });
+
+    function switchAdminTab(tab) {
+      const tabs = ['new','matchEdit','history','print','edit'];
+      tabs.forEach(t => {
+        const el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const sec = document.getElementById('adminSec' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (el) el.classList.remove('active');
+        if (sec) sec.style.display = 'none';
+      });
+      const a = tab.charAt(0).toUpperCase() + tab.slice(1);
+      document.getElementById('tab' + a)?.classList.add('active');
+      document.getElementById('adminSec' + a).style.display = 'block';
+    }
+
+    function setDefaultTeamsTemplate() {
+      document.getElementById('adminTeams').value =
+        Array.from({length:6}, (_,i) => `Mannschaft ${i+1}`).join('\n');
+    }
+
+    function saveData() {
+      if (!window.db || !window.fbRef || !window.fbSet) return;
+      window.fbSet(window.fbRef(window.db, 'tournaments'), tournaments)
+        .catch(err => {
+          console.error(err);
+          alert("Fehler beim Speichern: " + err.message);
+        });
+    }
+
+    function exportDataToFile() {
+      const blob = new Blob([JSON.stringify(tournaments, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `stocksport_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importDataFromFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error();
+          tournaments = data;
+          saveData();
+          alert('Daten erfolgreich importiert.');
+        } catch {
+          alert('Fehler beim Importieren: ungültige JSON-Datei.');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function addHistoryEntry(tId, text) {
+      if (!tournaments[tId]) return;
+      tournaments[tId].history ||= [];
+      tournaments[tId].history.unshift({
+        time: new Date().toLocaleString('de-DE'),
+        text
+      });
+    }
+
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id)?.classList.add('active');
+    }
+
+    function goToMainMenu() {
+      renderMainButtons();
+      showView('view-main');
+    }
+
+    function checkAdminAccess() {
+      const input = prompt("Bitte Admin-Passwort eingeben:");
+      if (input === ADMIN_PASS) {
+        populateAdminTournamentList();
+        populateAdminPrintList();
+        populateAdminMatchEditTournaments();
+        populateAdminHistoryTournaments();
+        switchAdminTab('new');
+        showView('view-admin');
+      } else if (input !== null) {
+        alert("Falsches Passwort!");
+      }
+    }
+
+    function fillTournamentSelect(id, includeBlank=true) {
+      const select = document.getElementById(id);
+      if (!select) return;
+      select.innerHTML = includeBlank ? '<option value="">-- Turnier wählen --</option>' : '';
+      Object.entries(tournaments).forEach(([key,t]) => {
+        const o = document.createElement('option');
+        o.value = key; o.textContent = t.name || key;
+        select.appendChild(o);
+      });
+    }
+    function populateAdminTournamentList(){ fillTournamentSelect('adminSelectTournament'); }
+    function populateAdminPrintList(){ fillTournamentSelect('adminPrintSelectTournament'); }
+    function populateAdminMatchEditTournaments(){ fillTournamentSelect('adminMatchEditSelectTournament'); }
+    function populateAdminHistoryTournaments(){ fillTournamentSelect('adminHistorySelectTournament'); }
+
+    function renderMainButtons() {
+      const c = document.getElementById('tournamentButtons');
+      if (!c) return;
+      c.innerHTML = '';
+      const ids = Object.keys(tournaments);
+      if (!ids.length) {
+        c.innerHTML = '<p style="color:var(--text-muted);text-align:center;">Keine Turniere vorhanden.</p>';
+        return;
+      }
+      ids.forEach(id => {
+        const b = document.createElement('button');
+        b.className = 'btn-tournament';
+        b.textContent = tournaments[id].name;
+        b.onclick = () => openGroupSelection(id);
+        c.appendChild(b);
+      });
+    }
+
+    function openGroupSelection(id) {
+      activeId = id;
+      const t = tournaments[id];
+      if (!t) return;
+
+      if (t.groups) {
+        Object.entries(t.groups).forEach(([gKey, gData]) => {
+          if (!gData.matches || Object.keys(gData.matches).length === 0) {
+            if (gData.teams && gData.teams.length >= 2) {
+              gData.matches = generateFixturesForTeams(gData.teams, !!t.hasReturnLeg);
+            }
+          }
+        });
+      }
+
+      let sets = t.totalSets || 5;
+      let desc = sets === 'bo3' ? 'Best of 3' : sets === 'bo5' ? 'Best of 5' : `${sets} Sätze`;
+      document.getElementById('groupsTitle').textContent = t.name;
+      document.getElementById('groupsSub').textContent =
+        `${t.groupCount} Gruppe(n) | ${t.advancing || 2} Aufsteiger | ${desc} ${t.hasReturnLeg ? '| Mit Rückrunde' : ''}`;
+      const c = document.getElementById('groupCardsContainer');
+      c.innerHTML = '';
+      
+      if (t.groups) {
+        Object.entries(t.groups).forEach(([gKey, gData]) => {
+          const div = document.createElement('div');
+          div.className = 'group-card';
+          div.innerHTML = `<h3>${gData.name || gKey}</h3>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-secondary" style="padding:6px; font-size:0.8rem;" onclick="openGroupTable('${gKey}')">📊 Tabelle</button>
+              <button class="btn" style="padding:6px; font-size:0.8rem;" onclick="openMatchSelection('${gKey}')">✏️ Ergebnis</button>
+            </div>`;
+          c.appendChild(div);
+        });
+      }
+
+      if (t.hasKo) {
+        document.getElementById('dashKoContainer').style.display = 'block';
+      } else {
+        document.getElementById('dashKoContainer').style.display = 'none';
+      }
+
+      showView('view-groups');
+    }
+
+    function openGroupTable(gKey) {
+      activeGroup = gKey;
+      const t = tournaments[activeId];
+      const g = t.groups[gKey];
+      document.getElementById('tableTitle').textContent = `Tabelle: ${g.name || gKey}`;
+      
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      let standings = calculateStandings(gKey);
+      standings.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        if (idx < (t.advancing || 2) && t.groupCount === 1) {
+          tr.className = 'promotion-cutoff';
+        }
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${row.name} ${row.dq ? '(DQ)' : row.dnf ? '(DNF)' : ''}</td>
+          <td>${row.played}</td>
+          <td>${row.points}</td>
+          <td>${row.stocksFor}:${row.stocksAgainst}</td>
+          <td>${row.quota.toFixed(3)}</td>
+          <td class="pts-disp">${row.setPoints || 0}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      showView('view-table');
+    }
+
+    function calculateStandings(gKey) {
+      const t = tournaments[activeId];
+      const g = t.groups[gKey];
+      const teams = g.teams || [];
+      const stats = {};
+
+      teams.forEach(tm => {
+        stats[tm.id] = {
+          id: tm.id,
+          name: tm.name,
+          played: 0,
+          points: 0,
+          stocksFor: 0,
+          stocksAgainst: 0,
+          setPoints: 0,
+          dq: tm.dq || false,
+          dnf: tm.dnf || false
+        };
+      });
+
+      if (g.matches) {
+        Object.values(g.matches).forEach(m => {
+          if (!m.completed) return;
+          const a = stats[m.teamA];
+          const b = stats[m.teamB];
+          if (!a || !b) return;
+
+          a.played++;
+          b.played++;
+
+          a.stocksFor += m.stocksA;
+          a.stocksAgainst += m.stocksB;
+          b.stocksFor += m.stocksB;
+          b.stocksAgainst += m.stocksA;
+
+          // Satzpunkte berechnen: Gewinn = 2 Pkt, Unentschieden = 1 Pkt
+          let pA = 0;
+          let pB = 0;
+          if (m.games && m.games.length > 0) {
+            m.games.forEach(gm => {
+              if (gm.sA > gm.sB) pA += 2;
+              else if (gm.sB > gm.sA) pB += 2;
+              else if (gm.sA > 0 || gm.sB > 0) { pA += 1; pB += 1; }
+            });
+          } else {
+            pA = m.pointsA || 0;
+            pB = m.pointsB || 0;
+          }
+
+          // Match-Punkte (3 Punkte für Sieg, 1 für Unentschieden)
+          if (pA > pB) {
+            a.points += 3;
+          } else if (pB > pA) {
+            b.points += 3;
+          } else {
+            a.points += 1;
+            b.points += 1;
+          }
+
+          a.setPoints += pA;
+          b.setPoints += pB;
+        });
+      }
+
+      let arr = Object.values(stats);
+      arr.forEach(item => {
+        item.quota = item.stocksAgainst === 0 ? (item.stocksFor > 0 ? 999.0 : 1.0) : item.stocksFor / item.stocksAgainst;
+      });
+
+      arr.sort((x, y) => {
+        if (x.dq !== y.dq) return x.dq ? 1 : -1;
+        if (x.dnf !== y.dnf) return x.dnf ? 1 : -1;
+        if (y.points !== x.points) return y.points - x.points;
+        if (y.setPoints !== x.setPoints) return y.setPoints - x.setPoints;
+        return y.quota - x.quota;
+      });
+
+      return arr;
+    }
+
+    function openMatchSelection(gKey) {
+      activeGroup = gKey;
+      const t = tournaments[activeId];
+      const g = t.groups[gKey];
+      
+      const selA = document.getElementById('selectTeamA');
+      const selB = document.getElementById('selectTeamB');
+      
+      selA.innerHTML = '<option value="">-- Mannschaft wählen --</option>';
+      (g.teams || []).forEach(tm => {
+        if (!tm.dq && !tm.dnf) {
+          const o = document.createElement('option');
+          o.value = tm.id; o.textContent = tm.name;
+          selA.appendChild(o);
+        }
+      });
+
+      selB.innerHTML = '<option value="">-- Zuerst Mannschaft wählen --</option>';
+      selB.disabled = true;
+      document.getElementById('scoreArea').style.display = 'none';
+      
+      showView('view-match');
+    }
+
+    function onTeamASelected() {
+      const valA = document.getElementById('selectTeamA').value;
+      const selB = document.getElementById('selectTeamB');
+      const t = tournaments[activeId];
+      const g = t.groups[activeGroup];
+
+      selB.innerHTML = '<option value="">-- Gegner wählen --</option>';
+      if (!valA) {
+        selB.disabled = true;
+        document.getElementById('scoreArea').style.display = 'none';
+        return;
+      }
+
+      (g.teams || []).forEach(tm => {
+        if (tm.id != valA && !tm.dq && !tm.dnf) {
+          const o = document.createElement('option');
+          o.value = tm.id; o.textContent = tm.name;
+          selB.appendChild(o);
+        }
+      });
+      selB.disabled = false;
+      document.getElementById('scoreArea').style.display = 'none';
+    }
+
+    function onTeamBSelected() {
+      const valA = document.getElementById('selectTeamA').value;
+      const valB = document.getElementById('selectTeamB').value;
+      if (!valA || !valB) {
+        document.getElementById('scoreArea').style.display = 'none';
+        return;
+      }
+
+      const t = tournaments[activeId];
+      const g = t.groups[activeGroup];
+      const teamAObj = g.teams.find(x => x.id == valA);
+      const teamBObj = g.teams.find(x => x.id == valB);
+
+      document.getElementById('teamAName').textContent = teamAObj.name;
+      document.getElementById('teamBName').textContent = teamBObj.name;
+
+      let totalSets = t.totalSets || 5;
+      
+      let existingMatch = null;
+      if (g.matches) {
+        existingMatch = Object.values(g.matches).find(m => 
+          (m.teamA == valA && m.teamB == valB) || (m.teamA == valB && m.teamB == valA)
+        );
+      }
+
+      currentMatchGames = [];
+      if (existingMatch && existingMatch.games && existingMatch.games.length > 0) {
+        currentMatchGames = JSON.parse(JSON.stringify(existingMatch.games));
+      } else {
+        for(let i=0; i<totalSets; i++) {
+          currentMatchGames.push({ sA: 0, sB: 0 });
+        }
+      }
+
+      renderMatchSteppers();
+      document.getElementById('scoreArea').style.display = 'block';
+    }
+
+    function renderMatchSteppers() {
+      const container = document.getElementById('gamesContainer');
+      container.innerHTML = '';
+
+      currentMatchGames.forEach((gm, idx) => {
+        const row = document.createElement('div');
+        row.className = 'game-row';
+        row.innerHTML = `
+          <div class="game-title">Satz ${idx+1}</div>
+          <div class="stepper">
+            <button class="btn-step" onclick="changeScore(${idx}, 'A', -1)">-</button>
+            <span class="score-disp" id="scoreA_${idx}">${gm.sA}</span>
+            <button class="btn-step" onclick="changeScore(${idx}, 'A', 1)">+</button>
+          </div>
+          <div style="font-weight:bold; color:var(--text-muted);">:</div>
+          <div class="stepper">
+            <button class="btn-step" onclick="changeScore(${idx}, 'B', -1)">-</button>
+            <span class="score-disp" id="scoreB_${idx}">${gm.sB}</span>
+            <button class="btn-step" onclick="changeScore(${idx}, 'B', 1)">+</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      updateMatchSummary();
+    }
+
+    function changeScore(idx, team, delta) {
+      if (team === 'A') {
+        currentMatchGames[idx].sA = Math.max(0, currentMatchGames[idx].sA + delta);
+        document.getElementById(`scoreA_${idx}`).textContent = currentMatchGames[idx].sA;
+      } else {
+        currentMatchGames[idx].sB = Math.max(0, currentMatchGames[idx].sB + delta);
+        document.getElementById(`scoreB_${idx}`).textContent = currentMatchGames[idx].sB;
+      }
+      updateMatchSummary();
+    }
+
+    function updateMatchSummary() {
+      let pA = 0, pB = 0, stA = 0, stB = 0;
+      currentMatchGames.forEach(gm => {
+        stA += gm.sA;
+        stB += gm.sB;
+        if (gm.sA > gm.sB) pA += 2;
+        else if (gm.sB > gm.sA) pB += 2;
+        else if (gm.sA > 0 || gm.sB > 0) { pA += 1; pB += 1; }
+      });
+      document.getElementById('matchSummary').textContent = `Endstand: Satzpunkte ${pA} : ${pB} (Stöcke ${stA} : ${stB})`;
+    }
+
+    function saveMatchResult() {
+      const valA = document.getElementById('selectTeamA').value;
+      const valB = document.getElementById('selectTeamB').value;
+      if (!valA || !valB) return;
+
+      let pA = 0, pB = 0, stA = 0, stB = 0;
+      currentMatchGames.forEach(gm => {
+        stA += gm.sA;
+        stB += gm.sB;
+        if (gm.sA > gm.sB) pA += 2;
+        else if (gm.sB > gm.sA) pB += 2;
+        else if (gm.sA > 0 || gm.sB > 0) { pA += 1; pB += 1; }
+      });
+
+      const t = tournaments[activeId];
+      const g = t.groups[activeGroup];
+      g.matches ||= {};
+
+      let targetMatchId = null;
+      Object.entries(g.matches).forEach(([mId, m]) => {
+        if ((m.teamA == valA && m.teamB == valB) && !m.completed) {
+          targetMatchId = mId;
+        }
+      });
+
+      if (!targetMatchId) {
+        targetMatchId = 'm_' + Date.now();
+      }
+
+      g.matches[targetMatchId] = {
+        teamA: parseInt(valA),
+        teamB: parseInt(valB),
+        games: JSON.parse(JSON.stringify(currentMatchGames)),
+        pointsA: pA,
+        pointsB: pB,
+        stocksA: stA,
+        stocksB: stB,
+        completed: true
+      };
+
+      const teamAObj = g.teams.find(x => x.id == valA);
+      const teamBObj = g.teams.find(x => x.id == valB);
+      addHistoryEntry(activeId, `Ergebnis eingetragen: ${teamAObj.name} vs ${teamBObj.name} (${pA}:${pB} Satzpunkte, ${stA}:${stB} Stöcke)`);
+
+      saveData();
+      alert("Ergebnis erfolgreich gespeichert!");
+      openGroupSelection(activeId);
+    }
+
+    function openKoInfo(stage) {
+      activeKoStage = stage;
+      renderKoMatches(stage);
+    }
+
+    function renderKoMatches(stage) {
+      activeKoStage = stage;
+      document.getElementById('koTitle').textContent = `KO-Phase: ${stage}`;
+      const list = document.getElementById('koMatchList');
+      list.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:10px;">Noch keine KO-Begegnungen generiert.</p>';
+      showView('view-ko');
+    }
+
+    function autoGenerateKoPairings() {
+      alert("KO-Paarungen wurden generiert.");
+    }
+
+    function generateFixturesForTeams(teams, hasReturnLeg) {
+      let matches = {};
+      if (teams.length < 2) return matches;
+
+      let list = [...teams];
+      if (list.length % 2 !== 0) {
+        list.push({ id: -1, name: 'PAUSE', dummy: true });
+      }
+
+      let numTeams = list.length;
+      let rounds = numTeams - 1;
+      let half = numTeams / 2;
+      let matchCounter = 1;
+
+      for (let r = 0; r < rounds; r++) {
+        for (let i = 0; i < half; i++) {
+          let t1 = list[i];
+          let t2 = list[numTeams - 1 - i];
+          if (!t1.dummy && !t2.dummy) {
+            let mId = `m_gen_${matchCounter++}`;
+            matches[mId] = {
+              teamA: t1.id,
+              teamB: t2.id,
+              games: [],
+              pointsA: 0,
+              pointsB: 0,
+              stocksA: 0,
+              stocksB: 0,
+              completed: false
+            };
+          }
+        }
+        let temp = list.pop();
+        list.splice(1, 0, temp);
+      }
+
+      if (hasReturnLeg) {
+        let hinrundeKeys = Object.keys(matches);
+        hinrundeKeys.forEach(k => {
+          let hm = matches[k];
+          let mId = `m_gen_${matchCounter++}`;
+          matches[mId] = {
+            teamA: hm.teamB,
+            teamB: hm.teamA,
+            games: [],
+            pointsA: 0,
+            pointsB: 0,
+            stocksA: 0,
+            stocksB: 0,
+            completed: false
+          };
+        });
+      }
+
+      return matches;
+    }
+
+    function createNewTournament() {
+      const name = document.getElementById('adminName').value.trim();
+      if (!name) {
+        alert("Bitte einen Turniernamen eingeben.");
+        return;
+      }
+      const groupCount = parseInt(document.getElementById('adminGroupCount').value);
+      const advancing = parseInt(document.getElementById('adminAdvancing').value);
+      const totalSets = parseInt(document.getElementById('adminTotalSets').value);
+      const hasKo = document.getElementById('adminHasKo').checked;
+      const hasReturnLeg = document.getElementById('adminHasReturnLeg').checked;
+      const teamLines = document.getElementById('adminTeams').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+      if (teamLines.length < 2) {
+        alert("Bitte mindestens 2 Mannschaften eingeben.");
+        return;
+      }
+
+      const tId = 't_' + Date.now();
+      tournaments[tId] = {
+        name,
+        groupCount,
+        advancing,
+        totalSets,
+        hasKo,
+        hasReturnLeg,
+        groups: {},
+        history: []
+      };
+
+      for (let i = 0; i < groupCount; i++) {
+        tournaments[tId].groups[`group_${i+1}`] = {
+          name: groupCount === 1 ? 'Gruppe 1' : `Gruppe ${String.fromCharCode(65 + i)}`,
+          teams: []
+        };
+      }
+
+      teamLines.forEach((tName, idx) => {
+        let gKey = `group_${(idx % groupCount) + 1}`;
+        tournaments[tId].groups[gKey].teams.push({
+          id: idx + 1,
+          name: tName
+        });
+      });
+
+      Object.keys(tournaments[tId].groups).forEach(gKey => {
+        let g = tournaments[tId].groups[gKey];
+        g.matches = generateFixturesForTeams(g.teams, hasReturnLeg);
+      });
+
+      addHistoryEntry(tId, `Turnier "${name}" erstellt (inkl. Spielplan).`);
+      saveData();
+      alert("Turnier & Spielplan erfolgreich erstellt!");
+      goToMainMenu();
+    }
+
+    function onAdminMatchEditTournamentChange() {
+      const tId = document.getElementById('adminMatchEditSelectTournament').value;
+      const wrapper = document.getElementById('adminMatchEditGroupWrapper');
+      const groupSel = document.getElementById('adminMatchEditSelectGroup');
+      if (!tId || !tournaments[tId]) {
+        wrapper.style.display = 'none';
+        return;
+      }
+      wrapper.style.display = 'block';
+      groupSel.innerHTML = '<option value="">-- Gruppe wählen --</option>';
+      Object.entries(tournaments[tId].groups).forEach(([gKey, gData]) => {
+        const o = document.createElement('option');
+        o.value = gKey; o.textContent = gData.name || gKey;
+        groupSel.appendChild(o);
+      });
+      document.getElementById('adminCompletedMatchesList').innerHTML = '';
+      document.getElementById('adminEditMatchForm').style.display = 'none';
+    }
+
+    function loadCompletedMatchesForAdmin() {
+      const tId = document.getElementById('adminMatchEditSelectTournament').value;
+      const gKey = document.getElementById('adminMatchEditSelectGroup').value;
+      const list = document.getElementById('adminCompletedMatchesList');
+      if (!tId || !gKey) return;
+
+      const g = tournaments[tId].groups[gKey];
+      list.innerHTML = '';
+      if (!g.matches || Object.keys(g.matches).length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); text-align:center;">Keine Spiele gefunden.</p>';
+        return;
+      }
+
+      Object.entries(g.matches).forEach(([mId, m]) => {
+        const tA = g.teams.find(x => x.id == m.teamA)?.name || 'Team A';
+        const tB = g.teams.find(x => x.id == m.teamB)?.name || 'Team B';
+        const statusText = m.completed ? `(${m.pointsA}:${m.pointsB} Satzpunkte)` : '[Offen]';
+        const div = document.createElement('div');
+        div.className = 'corr-item';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.innerHTML = `
+          <span><b>${tA}</b> vs <b>${tB}</b> ${statusText}</span>
+          <button class="btn btn-secondary" style="width:auto; padding:4px 8px; margin:0;" onclick="startAdminMatchCorrection('${tId}', '${gKey}', '${mId}')">✏️ Bearbeiten</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function startAdminMatchCorrection(tId, gKey, mId) {
+      adminEditingMatchRef = { tId, gKey, mId };
+      const m = tournaments[tId].groups[gKey].matches[mId];
+      const g = tournaments[tId].groups[gKey];
+      const tA = g.teams.find(x => x.id == m.teamA)?.name || 'Team A';
+      const tB = g.teams.find(x => x.id == m.teamB)?.name || 'Team B';
+
+      document.getElementById('adminEditMatchHeader').textContent = `${tA} vs ${tB}`;
+      
+      let totalSets = tournaments[tId].totalSets || 5;
+      currentMatchGames = m.games && m.games.length > 0 ? JSON.parse(JSON.stringify(m.games)) : [];
+      if (currentMatchGames.length === 0) {
+        for(let i=0; i<totalSets; i++) currentMatchGames.push({sA:0, sB:0});
+      }
+
+      const container = document.getElementById('adminEditGamesContainer');
+      container.innerHTML = '';
+      currentMatchGames.forEach((gm, idx) => {
+        const row = document.createElement('div');
+        row.className = 'game-row';
+        row.innerHTML = `
+          <div class="game-title">Satz ${idx+1}</div>
+          <div class="stepper">
+            <button class="btn-step" onclick="changeAdminScore(${idx}, 'A', -1)">-</button>
+            <span class="score-disp" id="adminScoreA_${idx}">${gm.sA}</span>
+            <button class="btn-step" onclick="changeAdminScore(${idx}, 'A', 1)">+</button>
+          </div>
+          <div style="font-weight:bold; color:var(--text-muted);">:</div>
+          <div class="stepper">
+            <button class="btn-step" onclick="changeAdminScore(${idx}, 'B', -1)">-</button>
+            <span class="score-disp" id="adminScoreB_${idx}">${gm.sB}</span>
+            <button class="btn-step" onclick="changeAdminScore(${idx}, 'B', 1)">+</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      updateAdminMatchSummary();
+      document.getElementById('adminEditMatchForm').style.display = 'block';
+    }
+
+    function changeAdminScore(idx, team, delta) {
+      if (team === 'A') {
+        currentMatchGames[idx].sA = Math.max(0, currentMatchGames[idx].sA + delta);
+        document.getElementById(`adminScoreA_${idx}`).textContent = currentMatchGames[idx].sA;
+      } else {
+        currentMatchGames[idx].sB = Math.max(0, currentMatchGames[idx].sB + delta);
+        document.getElementById(`adminScoreB_${idx}`).textContent = currentMatchGames[idx].sB;
+      }
+      updateAdminMatchSummary();
+    }
+
+    function updateAdminMatchSummary() {
+      let pA = 0, pB = 0, stA = 0, stB = 0;
+      currentMatchGames.forEach(gm => {
+        stA += gm.sA;
+        stB += gm.sB;
+        if (gm.sA > gm.sB) pA += 2;
+        else if (gm.sB > gm.sA) pB += 2;
+        else if (gm.sA > 0 || gm.sB > 0) { pA += 1; pB += 1; }
+      });
+      document.getElementById('adminEditMatchSummary').textContent = `Endstand: Satzpunkte ${pA} : ${pB} (Stöcke ${stA} : ${stB})`;
+    }
+
+    function saveAdminMatchCorrection() {
+      if (!adminEditingMatchRef) return;
+      const { tId, gKey, mId } = adminEditingMatchRef;
+      const m = tournaments[tId].groups[gKey].matches[mId];
+
+      let pA = 0, pB = 0, stA = 0, stB = 0;
+      currentMatchGames.forEach(gm => {
+        stA += gm.sA;
+        stB += gm.sB;
+        if (gm.sA > gm.sB) pA += 2;
+        else if (gm.sB > gm.sA) pB += 2;
+        else if (gm.sA > 0 || gm.sB > 0) { pA += 1; pB += 1; }
+      });
+
+      m.games = JSON.parse(JSON.stringify(currentMatchGames));
+      m.pointsA = pA;
+      m.pointsB = pB;
+      m.stocksA = stA;
+      m.stocksB = stB;
+      m.completed = true;
+
+      addHistoryEntry(tId, `Spielkorrektur durchgeführt.`);
+      saveData();
+      alert("Korrektur gespeichert!");
+      document.getElementById('adminEditMatchForm').style.display = 'none';
+      loadCompletedMatchesForAdmin();
+    }
+
+    function resetAdminMatchToOpen() {
+      if (!adminEditingMatchRef) return;
+      const { tId, gKey, mId } = adminEditingMatchRef;
+      const m = tournaments[tId].groups[gKey].matches[mId];
+      
+      if (!confirm("Soll dieses Spiel wirklich auf 'Offen' zurückgesetzt werden? Das Ergebnis wird gelöscht und fließt nicht mehr in die Tabelle ein.")) {
+        return;
+      }
+
+      m.completed = false;
+      m.games = [];
+      m.pointsA = 0;
+      m.pointsB = 0;
+      m.stocksA = 0;
+      m.stocksB = 0;
+
+      addHistoryEntry(tId, `Spiel auf 'Offen' zurückgesetzt.`);
+      saveData();
+      alert("Spiel wurde erfolgreich auf 'Offen' zurückgesetzt!");
+      document.getElementById('adminEditMatchForm').style.display = 'none';
+      loadCompletedMatchesForAdmin();
+    }
+
+    function loadTournamentHistory() {
+      const tId = document.getElementById('adminHistorySelectTournament').value;
+      const container = document.getElementById('adminHistoryContainer');
+      container.innerHTML = '';
+      if (!tId || !tournaments[tId]) return;
+
+      const history = tournaments[tId].history || [];
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">Keine Historie vorhanden.</p>';
+        return;
+      }
+
+      history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span style="font-size:0.65rem; color:var(--text-muted);">${item.time}</span><span>${item.text}</span>`;
+        container.appendChild(div);
+      });
+    }
+
+    function loadAdminTournamentData() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const body = document.getElementById('adminEditBody');
+      if (!tId || !tournaments[tId]) {
+        body.style.display = 'none';
+        return;
+      }
+      body.style.display = 'block';
+      document.getElementById('adminEditName').value = tournaments[tId].name || '';
+      document.getElementById('adminEditHasReturnLeg').checked = !!tournaments[tId].hasReturnLeg;
+      
+      const groupSel = document.getElementById('adminTeamEditGroupSelect');
+      const dqGroupSel = document.getElementById('adminDqGroupSelect');
+      groupSel.innerHTML = '<option value="">-- Gruppe wählen --</option>';
+      dqGroupSel.innerHTML = '<option value="">-- Gruppe wählen --</option>';
+
+      Object.entries(tournaments[tId].groups).forEach(([gKey, gData]) => {
+        groupSel.innerHTML += `<option value="${gKey}">${gData.name || gKey}</option>`;
+        dqGroupSel.innerHTML += `<option value="${gKey}">${gData.name || gKey}</option>`;
+      });
+      document.getElementById('adminTeamEditList').innerHTML = '';
+      document.getElementById('adminDqTeamSelect').innerHTML = '<option value="">-- Zuerst Gruppe wählen --</option>';
+    }
+
+    function saveTournamentSettings() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      if (!tId || !tournaments[tId]) return;
+      const newName = document.getElementById('adminEditName').value.trim();
+      const newReturnLeg = document.getElementById('adminEditHasReturnLeg').checked;
+      if (!newName) {
+        alert("Name darf nicht leer sein.");
+        return;
+      }
+      tournaments[tId].name = newName;
+      tournaments[tId].hasReturnLeg = newReturnLeg;
+      addHistoryEntry(tId, `Turnier-Einstellungen aktualisiert (Rückrunde: ${newReturnLeg ? 'Ja' : 'Nein'})`);
+      saveData();
+      alert("Einstellungen gespeichert!");
+    }
+
+    function regenerateTournamentFixtures() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      if (!tId || !tournaments[tId]) return;
+      if (!confirm("Spielplan wirklich neu generieren? Bereits eingetragene Ergebnisse können dabei verloren gehen, falls Teams geändert wurden.")) return;
+
+      const hasReturnLeg = document.getElementById('adminEditHasReturnLeg').checked;
+      tournaments[tId].hasReturnLeg = hasReturnLeg;
+
+      Object.keys(tournaments[tId].groups).forEach(gKey => {
+        let g = tournaments[tId].groups[gKey];
+        g.matches = generateFixturesForTeams(g.teams, hasReturnLeg);
+      });
+
+      addHistoryEntry(tId, `Spielplan neu generiert (Rückrunde: ${hasReturnLeg ? 'Ja' : 'Nein'})`);
+      saveData();
+      alert("Spielplan erfolgreich neu generiert!");
+    }
+
+    function loadAdminTeamsForGroup() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const gKey = document.getElementById('adminTeamEditGroupSelect').value;
+      const list = document.getElementById('adminTeamEditList');
+      list.innerHTML = '';
+      if (!tId || !gKey) return;
+
+      const g = tournaments[tId].groups[gKey];
+      (g.teams || []).forEach(tm => {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.gap = '4px';
+        div.style.marginBottom = '4px';
+        div.innerHTML = `
+          <input type="text" value="${tm.name}" id="teamName_${tm.id}" style="margin-bottom:0;">
+          <button class="btn btn-success" style="width:auto; padding:4px 8px; margin:0;" onclick="updateTeamName('${gKey}', ${tm.id})">💾</button>
+          <button class="btn btn-danger" style="width:auto; padding:4px 8px; margin:0;" onclick="deleteTeamFromGroup('${gKey}', ${tm.id})">🗑️</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function updateTeamName(gKey, teamId) {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const input = document.getElementById(`teamName_${teamId}`);
+      if (!input) return;
+      const newName = input.value.trim();
+      if (!newName) return;
+
+      const g = tournaments[tId].groups[gKey];
+      const tm = g.teams.find(x => x.id == teamId);
+      if (tm) {
+        tm.name = newName;
+        addHistoryEntry(tId, `Team-Name aktualisiert zu "${newName}"`);
+        saveData();
+        alert("Name aktualisiert!");
+      }
+    }
+
+    function addNewTeamToGroup() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const gKey = document.getElementById('adminTeamEditGroupSelect').value;
+      const input = document.getElementById('adminNewTeamInput');
+      const name = input.value.trim();
+      if (!tId || !gKey || !name) return;
+
+      const g = tournaments[tId].groups[gKey];
+      g.teams ||= [];
+      const newId = Date.now();
+      g.teams.push({ id: newId, name });
+      input.value = '';
+      addHistoryEntry(tId, `Neues Team "${name}" hinzugefügt.`);
+      saveData();
+      loadAdminTeamsForGroup();
+    }
+
+    function deleteTeamFromGroup(gKey, teamId) {
+      if (!confirm("Team wirklich löschen?")) return;
+      const tId = document.getElementById('adminSelectTournament').value;
+      const g = tournaments[tId].groups[gKey];
+      g.teams = g.teams.filter(x => x.id != teamId);
+      addHistoryEntry(tId, `Team gelöscht.`);
+      saveData();
+      loadAdminTeamsForGroup();
+    }
+
+    function loadDqTeamsList() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const gKey = document.getElementById('adminDqGroupSelect').value;
+      const teamSel = document.getElementById('adminDqTeamSelect');
+      teamSel.innerHTML = '<option value="">-- Mannschaft wählen --</option>';
+      if (!tId || !gKey) return;
+
+      const g = tournaments[tId].groups[gKey];
+      (g.teams || []).forEach(tm => {
+        let status = tm.dq ? ' (DQ)' : tm.dnf ? ' (DNF)' : '';
+        const o = document.createElement('option');
+        o.value = tm.id; o.textContent = tm.name + status;
+        teamSel.appendChild(o);
+      });
+    }
+
+    function disqualifyTeamAction() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const gKey = document.getElementById('adminDqGroupSelect').value;
+      const teamId = document.getElementById('adminDqTeamSelect').value;
+      const type = document.getElementById('adminDqTypeSelect').value;
+      if (!tId || !gKey || !teamId) return;
+
+      const g = tournaments[tId].groups[gKey];
+      const tm = g.teams.find(x => x.id == teamId);
+      if (!tm) return;
+
+      tm.dq = (type === 'DQ');
+      tm.dnf = (type === 'DNF');
+      addHistoryEntry(tId, `Team "${tm.name}" Status gesetzt auf ${type}`);
+      saveData();
+      alert(`Status ${type} gesetzt!`);
+      loadDqTeamsList();
+    }
+
+    function removeDisqualificationAction() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      const gKey = document.getElementById('adminDqGroupSelect').value;
+      const teamId = document.getElementById('adminDqTeamSelect').value;
+      if (!tId || !gKey || !teamId) return;
+
+      const g = tournaments[tId].groups[gKey];
+      const tm = g.teams.find(x => x.id == teamId);
+      if (!tm) return;
+
+      tm.dq = false;
+      tm.dnf = false;
+      addHistoryEntry(tId, `Team "${tm.name}" Status aufgehoben.`);
+      saveData();
+      alert("Status aufgehoben!");
+      loadDqTeamsList();
+    }
+
+    function deleteTournament() {
+      const tId = document.getElementById('adminSelectTournament').value;
+      if (!tId || !tournaments[tId]) return;
+      if (!confirm(`Turnier "${tournaments[tId].name}" wirklich unwiderruflich löschen?`)) return;
+
+      delete tournaments[tId];
+      saveData();
+      alert("Turnier gelöscht.");
+      goToMainMenu();
+    }
+
+    function onPrintTournamentChanged() {
+      const tId = document.getElementById('adminPrintSelectTournament').value;
+      const content = document.getElementById('adminPrintContent');
+      const list = document.getElementById('printMatchList');
+      if (!tId || !tournaments[tId]) {
+        content.style.display = 'none';
+        return;
+      }
+      content.style.display = 'block';
+      
+      const t = tournaments[tId];
+      
+      Object.entries(t.groups).forEach(([gKey, gData]) => {
+        if (!gData.matches || Object.keys(gData.matches).length === 0) {
+          if (gData.teams && gData.teams.length >= 2) {
+            gData.matches = generateFixturesForTeams(gData.teams, !!t.hasReturnLeg);
+          }
+        }
+      });
+
+      let html = '';
+      Object.entries(t.groups).forEach(([gKey, gData]) => {
+        if (gData.matches) {
+          Object.entries(gData.matches).forEach(([mId, m]) => {
+            const tA = gData.teams.find(x => x.id == m.teamA)?.name || 'Team A';
+            const tB = gData.teams.find(x => x.id == m.teamB)?.name || 'Team B';
+            const state = m.completed ? ' (Gespielt)' : ' (Offen)';
+            html += `
+              <div class="match-checkbox-item">
+                <input type="checkbox" class="print-match-cb" data-t="${tId}" data-g="${gKey}" data-m="${mId}" checked>
+                <span>[${gData.name || gKey}] ${tA} vs. ${tB}${state}</span>
+              </div>
+            `;
+          });
+        }
+      });
+      list.innerHTML = html || '<p style="color:var(--text-muted); text-align:center; padding:10px;">Keine Spiele vorhanden.</p>';
+    }
+
+    function toggleAllMatchesPrint(select) {
+      document.querySelectorAll('.print-match-cb').forEach(cb => cb.checked = select);
+    }
+
+    function triggerPrintSelected() {
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = '';
+
+      const checkedBoxes = document.querySelectorAll('.print-match-cb:checked');
+      if (checkedBoxes.length === 0) {
+        alert("Bitte mindestens ein Spiel zum Drucken auswählen.");
+        return;
+      }
+
+      checkedBoxes.forEach((cb, index) => {
+        const tId = cb.getAttribute('data-t');
+        const gKey = cb.getAttribute('data-g');
+        const mId = cb.getAttribute('data-m');
+
+        const t = tournaments[tId];
+        const g = t.groups[gKey];
+        const m = g.matches[mId];
+
+        const tA = g.teams.find(x => x.id == m.teamA)?.name || 'Team A';
+        const tB = g.teams.find(x => x.id == m.teamB)?.name || 'Team B';
+        
+        const totalSets = parseInt(t.totalSets) || 5;
+        let setRows = '';
+        for (let i = 0; i < totalSets; i++) {
+           let leftTeam = (i % 2 === 0) ? tA : tB;
+           let rightTeam = (i % 2 === 0) ? tB : tA;
+           setRows += `
+              <tr>
+                <td class="anschub-col">${leftTeam}</td>
+                <td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td>
+                <td class="stockpunkte-sum-col"></td>
+                <td class="punkte-col"></td>
+                <td style="border: none; background: black; width: 1%;"></td>
+                <td class="anschub-col">${rightTeam}</td>
+                <td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td><td class="score-col"></td>
+                <td class="stockpunkte-sum-col"></td>
+                <td class="punkte-col"></td>
+              </tr>
+           `;
+        }
+
+        const sheet = document.createElement('div');
+        sheet.className = 'protocol-container';
+        sheet.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <td class="spiel-nr">Spiel ${index + 1}</td>
+                <td colspan="8" class="team-title">${tA}</td>
+                <td colspan="2" style="border:none;"></td>
+                <td colspan="9" class="team-title">${tB}</td>
+              </tr>
+              <tr class="subheader">
+                <td class="anschub-col">Anschub</td>
+                <td colspan="6">Eigene Stockpunkte (Kehren)</td>
+                <td class="stockpunkte-sum-col">Gesamt-<br>stöcke</td>
+                <td class="punkte-col">Punkte</td>
+                <td style="border: none; background: black;"></td>
+                <td class="anschub-col">Anschub</td>
+                <td colspan="6">Fremde Stockpunkte (Kehren)</td>
+                <td class="stockpunkte-sum-col">Gesamt-<br>stöcke</td>
+                <td class="punkte-col">Punkte</td>
+              </tr>
+            </thead>
+            <tbody>
+              ${setRows}
+              <tr class="sum-row">
+                <td class="anschub-col" style="text-align: right; padding-right: 6px;">Endstand:</td>
+                <td colspan="7" style="text-align: left; padding-left: 4px;">Stöcke: .................... | Punkte: .........</td>
+                <td class="punkte-col"></td>
+                <td style="border: none; background: black;"></td>
+                <td class="anschub-col" style="text-align: right; padding-right: 6px;">Endstand:</td>
+                <td colspan="7" style="text-align: left; padding-left: 4px;">Stöcke: .................... | Punkte: .........</td>
+                <td class="punkte-col"></td>
+              </tr>
+              <tr class="footer-section">
+                <td colspan="7" style="border-top: none;">
+                  Unterschrift: <span style="font-weight: bold;">${tB}</span>
+                  <div class="signature-line"></div>
+                </td>
+                <td colspan="2" style="text-align: center; vertical-align: middle; border-top: none;">
+                  <strong>Datum</strong>
+                </td>
+                <td style="border: none; background: black;"></td>
+                <td colspan="9" style="border-top: none;">
+                  Unterschrift: <span style="font-weight: bold;">${tA}</span>
+                  <div class="signature-line"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+        printArea.appendChild(sheet);
+      });
+
+      window.print();
+    }
+  </script>
+</body>
+</html>
